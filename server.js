@@ -53,6 +53,27 @@ wss.on('connection', (ws) => {
         });
     };
 
+    const broadcastServerMessage = (message, sender) => {
+        const messageData = {
+            type: 'message',
+            text: message,
+            user: sender,
+            timestamp: new Date().toISOString(),
+            style: {
+                fontStyle: 'italic',
+                fontSize: 'smaller',
+                color: 'red'
+            }
+        };
+        console.log('Server broadcasting message:', messageData); 
+
+        clients.forEach((client) => {
+            if (client.ws.readyState === WebSocket.OPEN) {
+                client.ws.send(JSON.stringify(messageData));
+            }
+        });
+    };
+
     ws.on('message', (message) => {
         try {
             const data = JSON.parse(message);
@@ -62,10 +83,12 @@ wss.on('connection', (ws) => {
                 if (newUsername === '' || usedUsernames.has(newUsername)) {
                     ws.send(JSON.stringify({ type: 'error', text: 'Username is already taken or invalid.' }));
                 } else {
-                    usedUsernames.delete(username);
+                    const oldUsername = client.username;
+                    usedUsernames.delete(oldUsername);
                     usedUsernames.add(newUsername);
                     client.username = newUsername;
                     ws.send(JSON.stringify({ type: 'notification', text: `Username changed to ${newUsername}`, user: { username: newUsername, userColor } }));
+                    broadcastServerMessage(`${oldUsername} has changed their name to ${newUsername}`, { username: 'Server', userColor: 'red' });
                 }
             } else if (data.type === 'message') {
                 broadcastMessage(data.text, { username: client.username, userColor: client.userColor });

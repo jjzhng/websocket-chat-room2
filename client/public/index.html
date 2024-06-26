@@ -72,13 +72,12 @@
             <button onclick="sendMessage()">Send</button>
         </div>
         <div>
-            <input type="text" id="usernameInput" placeholder="Choose a username" />
+            <input type="text" id="usernameInput" placeholder="Choose a username" autocomplete="off" onkeypress="handleKeyPressUsername(event)" />
             <button onclick="setUsername()">Set Username</button>
             <p id="usernameError" style="color: red;"></p>
             <p id="usernameSuccess" style="color: green;"></p>
         </div>
     </div>
-
     <script>
         const ws = new WebSocket('ws://localhost:8080');
         let username = 'User'; // Temporary username
@@ -119,6 +118,12 @@
             const messageText = document.createElement('span');
             messageText.textContent = messageData.text;
 
+            if (messageData.user.username === 'Server') {
+                messageText.style.fontStyle = 'italic';
+                messageText.style.fontSize = 'smaller';
+                messageText.style.color = 'red';
+            }
+
             messageElement.appendChild(userSpan);
             messageElement.appendChild(messageText);
             chatWindow.appendChild(messageElement);
@@ -153,6 +158,12 @@
         function handleKeyPress(event) {
             if (event.key === 'Enter') {
                 sendMessage();
+            }
+        }
+
+        function handleKeyPressUsername(event) {
+            if (event.key === 'Enter') {
+              setUsername();
             }
         }
     </script>

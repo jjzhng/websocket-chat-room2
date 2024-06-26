@@ -63,14 +63,26 @@ const ChatRoom = () => {
         }
     };
 
+    const renderMessage = (msg, index) => {
+        const { user, text, style } = msg;
+        const messageStyle = {
+            fontStyle: style?.fontStyle || 'normal',
+            fontSize: style?.fontSize || 'inherit',
+            color: style?.color || 'inherit'
+        };
+
+        return (
+            <div key={index} className="chat-message">
+                <span style={{ color: user.userColor }}>{user.username}</span>: 
+                <span style={messageStyle}>{text}</span>
+            </div>
+        );
+    };
+
     return (
         <div>
             <div className="chat-window">
-                {messages.map((msg, index) => (
-                    <div key={index} className="chat-message">
-                        <span style={{ color: msg.user.userColor }}>{msg.user.username}</span>: {msg.text}
-                    </div>
-                ))}
+                {messages.map((msg, index) => renderMessage(msg, index))}
             </div>
             <div>
                 <input
@@ -78,6 +90,11 @@ const ChatRoom = () => {
                     placeholder="Choose a username"
                     value={usernameInput}
                     onChange={(e) => setUsernameInput(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            setUsernameHandler();
+                        }
+                    }}
                 />
                 <button onClick={setUsernameHandler}>Set Username</button>
                 {usernameError && <p style={{ color: 'red' }}>{usernameError}</p>}
@@ -87,7 +104,7 @@ const ChatRoom = () => {
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                         sendMessage();
                     }
