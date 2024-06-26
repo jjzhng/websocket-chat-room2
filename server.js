@@ -21,7 +21,7 @@ const generateUniqueUsername = () => {
     let username;
     do {
         username = `User${Math.floor(Math.random() * 10000)}`;
-    } while (usedUsernames.has(username));
+    } while (usedUsernames.has(username) || username.toLowerCase() === 'server');
     usedUsernames.add(username);
     return username;
 };
@@ -80,7 +80,7 @@ wss.on('connection', (ws) => {
 
             if (data.type === 'setUsername') {
                 const newUsername = data.username.trim();
-                if (newUsername === '' || usedUsernames.has(newUsername)) {
+                if (newUsername === '' || usedUsernames.has(newUsername) || newUsername.toLowerCase() === 'server') {
                     ws.send(JSON.stringify({ type: 'error', text: 'Username is already taken or invalid.' }));
                 } else {
                     const oldUsername = client.username;

@@ -152,6 +152,7 @@
             const usernameInput = document.getElementById('usernameInput').value.trim();
             if (usernameInput !== '') {
                 ws.send(JSON.stringify({ type: 'setUsername', username: usernameInput }));
+                usernameInput.value = '';
             }
         }
 
