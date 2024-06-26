@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat Room</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            width: 400px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .chat-window {
+            height: 300px;
+            overflow-y: scroll;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: #f2f2f2;
+        }
+        .chat-message span {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .input-container {
+            display: flex;
+            margin-top: 10px;
+        }
+        .input-container input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .input-container button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            border: none;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center; margin-bottom: 20px; font-size: 24px;">WebSocket Chat Room</h1>
+        <div class="chat-window" id="chat-window">
+            <!-- Messages will be rendered here dynamically -->
+        </div>
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off" onkeypress="handleKeyPress(event)" />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8080');
+        let username = 'User'; // You can modify this to set the username dynamically
+
+        ws.onopen = () => {
+            console.log('Connected to the server');
+        };
+
+        ws.onmessage = (event) => {
+            const messageData = JSON.parse(event.data);
+            const chatWindow = document.getElementById('chat-window');
+            
+            if (messageData.type === 'notification') {
+                username = messageData.user.username;
+            } else if (messageData.type === 'message') {
+                addMessageToChatWindow(messageData);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('Disconnected from the server');
+        };
+
+        function addMessageToChatWindow(messageData) {
+            const chatWindow = document.getElementById('chat-window');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-message');
+
+            const userSpan = document.createElement('span');
+            userSpan.style.color = messageData.user.userColor;
+            userSpan.textContent = messageData.user.username;
+
+            const messageText = document.createElement('span');
+            messageText.textContent = messageData.text;
+
+            messageElement.appendChild(userSpan);
+            messageElement.appendChild(messageText);
+            chatWindow.appendChild(messageElement);
+
+            // Auto-scroll to bottom
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+
+            if (message !== '') {
+                const messageData = {
+                    type: 'message',
+                    text: message,
+                    user: { username: username, userColor: 'blue' } // Assuming the user color is 'blue' for now
+                };
+
+                // Update the chat window immediately
+                addMessageToChatWindow(messageData);
+
+                // Send the message to the server
+                ws.send(JSON.stringify(messageData));
+
+                messageInput.value = '';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
