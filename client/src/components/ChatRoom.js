@@ -29,11 +29,13 @@ const ChatRoom = () => {
                 localStorage.setItem('userColor', messageData.user.userColor);
                 setUsernameSuccess(messageData.text);
                 setUsernameError('');
+                setUsernameInput('');
             } else if (messageData.type === 'message') {
                 setMessages((prevMessages) => [...prevMessages, messageData]);
             } else if (messageData.type === 'error') {
                 setUsernameError(messageData.text);
                 setUsernameSuccess('');
+                setUsernameInput('');
             }
         };
 
