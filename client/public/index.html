@@ -66,18 +66,22 @@
 <body>
     <div class="container">
         <h1 style="text-align: center; margin-bottom: 20px; font-size: 24px;">WebSocket Chat Room</h1>
-        <div class="chat-window" id="chat-window">
-            <!-- Messages will be rendered here dynamically -->
-        </div>
+        <div class="chat-window" id="chat-window"></div>
         <div class="input-container">
             <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off" onkeypress="handleKeyPress(event)" />
             <button onclick="sendMessage()">Send</button>
+        </div>
+        <div>
+            <input type="text" id="usernameInput" placeholder="Choose a username" />
+            <button onclick="setUsername()">Set Username</button>
+            <p id="usernameError" style="color: red;"></p>
+            <p id="usernameSuccess" style="color: green;"></p>
         </div>
     </div>
 
     <script>
         const ws = new WebSocket('ws://localhost:8080');
-        let username = 'User'; // You can modify this to set the username dynamically
+        let username = 'User'; // Temporary username
 
         ws.onopen = () => {
             console.log('Connected to the server');
@@ -89,8 +93,13 @@
             
             if (messageData.type === 'notification') {
                 username = messageData.user.username;
+                document.getElementById('usernameSuccess').textContent = messageData.text;
+                document.getElementById('usernameError').textContent = '';
             } else if (messageData.type === 'message') {
                 addMessageToChatWindow(messageData);
+            } else if (messageData.type === 'error') {
+                document.getElementById('usernameError').textContent = messageData.text;
+                document.getElementById('usernameSuccess').textContent = '';
             }
         };
 
@@ -114,7 +123,6 @@
             messageElement.appendChild(messageText);
             chatWindow.appendChild(messageElement);
 
-            // Auto-scroll to bottom
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
@@ -126,16 +134,19 @@
                 const messageData = {
                     type: 'message',
                     text: message,
-                    user: { username: username, userColor: 'blue' } // Assuming the user color is 'blue' for now
+                    user: { username: username, userColor: 'blue' }
                 };
 
-                // Update the chat window immediately
                 addMessageToChatWindow(messageData);
-
-                // Send the message to the server
                 ws.send(JSON.stringify(messageData));
-
                 messageInput.value = '';
+            }
+        }
+
+        function setUsername() {
+            const usernameInput = document.getElementById('usernameInput').value.trim();
+            if (usernameInput !== '') {
+                ws.send(JSON.stringify({ type: 'setUsername', username: usernameInput }));
             }
         }
 

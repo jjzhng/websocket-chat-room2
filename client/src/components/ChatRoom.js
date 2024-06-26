@@ -5,6 +5,9 @@ const ChatRoom = () => {
     const [message, setMessage] = useState('');
     const [username, setUsername] = useState(localStorage.getItem('username') || '');
     const [userColor, setUserColor] = useState(localStorage.getItem('userColor') || '');
+    const [usernameInput, setUsernameInput] = useState('');
+    const [usernameError, setUsernameError] = useState('');
+    const [usernameSuccess, setUsernameSuccess] = useState('');
     const ws = useRef(null);
 
     useEffect(() => {
@@ -21,8 +24,13 @@ const ChatRoom = () => {
                 setUserColor(messageData.user.userColor);
                 localStorage.setItem('username', messageData.user.username);
                 localStorage.setItem('userColor', messageData.user.userColor);
+                setUsernameSuccess(messageData.text);
+                setUsernameError('');
             } else if (messageData.type === 'message') {
                 setMessages((prevMessages) => [...prevMessages, messageData]);
+            } else if (messageData.type === 'error') {
+                setUsernameError(messageData.text);
+                setUsernameSuccess('');
             }
         };
 
@@ -43,13 +51,15 @@ const ChatRoom = () => {
                 user: { username, userColor }
             };
 
-            // Update local state immediately
             setMessages((prevMessages) => [...prevMessages, messageData]);
-
-            // Send message to the server
             ws.current.send(JSON.stringify(messageData));
-
             setMessage('');
+        }
+    };
+
+    const setUsernameHandler = () => {
+        if (usernameInput.trim() !== '') {
+            ws.current.send(JSON.stringify({ type: 'setUsername', username: usernameInput }));
         }
     };
 
@@ -61,6 +71,17 @@ const ChatRoom = () => {
                         <span style={{ color: msg.user.userColor }}>{msg.user.username}</span>: {msg.text}
                     </div>
                 ))}
+            </div>
+            <div>
+                <input
+                    type="text"
+                    placeholder="Choose a username"
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value)}
+                />
+                <button onClick={setUsernameHandler}>Set Username</button>
+                {usernameError && <p style={{ color: 'red' }}>{usernameError}</p>}
+                {usernameSuccess && <p style={{ color: 'green' }}>{usernameSuccess}</p>}
             </div>
             <input
                 type="text"
