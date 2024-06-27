@@ -13,19 +13,32 @@ let clients = [];
 let usedUsernames = new Set();
 
 const getRandomColor = () => {
-    const colors = ['#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e67e22', '#e74c3c'];
-    return colors[Math.floor(Math.random() * colors.length)];
+    const getRandomHexDigit = () => {
+        const hexDigits = '0123456789ABCDEF';
+        return hexDigits[Math.floor(Math.random() * hexDigits.length)];
+    };
+
+    let color = '#';
+
+    // not red (#e74c3c) bc server color 
+    do {
+        color = '#';
+        for (let i = 0; i < 6; i++) {
+            color += getRandomHexDigit();
+        }
+    } while (color === '#e74c3c');
+
+    return color;
 };
 
 const generateUniqueUsername = () => {
     let username;
     do {
         username = `User${Math.floor(Math.random() * 10000)}`;
-    } while (usedUsernames.has(username) || username.toLowerCase() === 'server');
+    } while (usedUsernames.has(username) || username.toLowerCase() === 'server' || username.length > 24); // Added length check
     usedUsernames.add(username);
     return username;
 };
-
 
 wss.on('connection', (ws) => {
     console.log('New client connected');
@@ -46,10 +59,14 @@ wss.on('connection', (ws) => {
             style: {
                 fontStyle: 'italic',
                 fontSize: 'smaller',
-                color: 'red'
+                color: '' 
             }
         };
-        console.log('Server broadcasting message:', messageData); 
+    
+        // TODO: not working 
+        messageData.style.color = sender.userColor === 'red' ? 'red' : 'yellow';
+    
+        console.log('Server broadcasting message:', messageData);
     
         clients.forEach((client) => {
             if (client.ws.readyState === WebSocket.OPEN) {
@@ -83,7 +100,9 @@ wss.on('connection', (ws) => {
 
             if (data.type === 'setUsername') {
                 const newUsername = data.username.trim();
-                if (newUsername === '' || usedUsernames.has(newUsername) || newUsername.toLowerCase() === 'server') {
+                if (newUsername === '' || newUsername.length > 24) { // Check length here
+                    ws.send(JSON.stringify({ type: 'error', text: 'Username must be between 1 and 24 characters.' }));
+                } else if (usedUsernames.has(newUsername) || newUsername.toLowerCase() === 'server') {
                     ws.send(JSON.stringify({ type: 'error', text: 'Username is already taken or invalid.' }));
                 } else {
                     const oldUsername = client.username;
@@ -94,7 +113,12 @@ wss.on('connection', (ws) => {
                     broadcastServerMessage(`${oldUsername} has changed their name to ${newUsername}`, { username: 'Server', userColor: 'red' });
                 }
             } else if (data.type === 'message') {
-                broadcastMessage(data.text, { username: client.username, userColor: client.userColor });
+                let censoredMessage = data.text;
+                bannedWords.forEach(word => {
+                    censoredMessage = censoredMessage.replace(new RegExp(word, 'gi'), '****'); // Replace banned words with asterisks
+                });
+    
+                broadcastMessage(censoredMessage, { username: client.username, userColor: client.userColor });
             }
         } catch (error) {
             console.error('Invalid JSON received:', error);
