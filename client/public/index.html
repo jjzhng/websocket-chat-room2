@@ -130,15 +130,26 @@
 
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
+        const badWords = ["blacklist"]; // Add your list of swear words here
+
+        const censorText = (text) => {
+            let censoredText = text;
+            badWords.forEach((word) => {
+                const regex = new RegExp(`\\b${word}\\b`, 'gi');
+                censoredText = censoredText.replace(regex, '*'.repeat(word.length));
+            });
+            return censoredText;
+        };
 
         function sendMessage() {
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value.trim();
+            const censoredMessage = censorText(message);
 
             if (message !== '') {
                 const messageData = {
                     type: 'message',
-                    text: message,
+                    text: censoredMessage,
                     user: { username: username, userColor: 'blue' }
                 };
 
@@ -152,6 +163,7 @@
             const usernameInput = document.getElementById('usernameInput').value.trim();
             if (usernameInput !== '') {
                 ws.send(JSON.stringify({ type: 'setUsername', username: usernameInput }));
+                usernameInput.value = '';
                 usernameInput.value = '';
             }
         }

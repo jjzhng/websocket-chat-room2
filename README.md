@@ -1,10 +1,10 @@
 # websocket-chat-room2
-Changes:
-Todo:
+Features: 
+- Chat with users 
+- Change username 
+- Censored word list
 
-Server message when user leaves/joins chatroom
-Clear set username field/box thing upon changing it
-Maybe disallow swear words lol
-
+Todo: 
+- Fix username not clearing whyyyyy
 
 Other (more) ambitious ideas: multiple chatrooms, private chats, prettier UI

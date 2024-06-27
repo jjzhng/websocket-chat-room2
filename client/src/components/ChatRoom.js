@@ -9,7 +9,6 @@ const ChatRoom = () => {
     const [usernameError, setUsernameError] = useState('');
     const [usernameSuccess, setUsernameSuccess] = useState('');
     const ws = useRef(null);
-
     
 
     useEffect(() => {
