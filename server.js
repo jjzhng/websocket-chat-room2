@@ -26,6 +26,7 @@ const generateUniqueUsername = () => {
     return username;
 };
 
+
 wss.on('connection', (ws) => {
     console.log('New client connected');
 
@@ -35,23 +36,6 @@ wss.on('connection', (ws) => {
 
     const client = { ws, username, userColor, sessionId };
     clients.push(client);
-
-    ws.send(JSON.stringify({ type: 'notification', text: `Welcome, ${username}!`, user: { username, userColor } }));
-
-    const broadcastMessage = (message, sender) => {
-        const messageData = {
-            type: 'message',
-            text: message,
-            user: sender,
-            timestamp: new Date().toISOString()
-        };
-
-        clients.forEach((client) => {
-            if (client.ws !== ws && client.ws.readyState === WebSocket.OPEN) {
-                client.ws.send(JSON.stringify(messageData));
-            }
-        });
-    };
 
     const broadcastServerMessage = (message, sender) => {
         const messageData = {
@@ -66,13 +50,32 @@ wss.on('connection', (ws) => {
             }
         };
         console.log('Server broadcasting message:', messageData); 
-
+    
         clients.forEach((client) => {
             if (client.ws.readyState === WebSocket.OPEN) {
                 client.ws.send(JSON.stringify(messageData));
             }
         });
     };
+    
+    
+    const broadcastMessage = (message, sender) => {
+        const messageData = {
+            type: 'message',
+            text: message,
+            user: sender,
+            timestamp: new Date().toISOString()
+        };
+    
+        clients.forEach((client) => {
+            if (client.ws !== ws && client.ws.readyState === WebSocket.OPEN) {
+                client.ws.send(JSON.stringify(messageData));
+            }
+        });
+    };
+
+    ws.send(JSON.stringify({ type: 'notification', text: `Welcome, ${username}!`, user: { username, userColor } }));
+    broadcastServerMessage(`${username} has joined the chat`, { username: 'Server', userColor: 'red' });
 
     ws.on('message', (message) => {
         try {
@@ -102,6 +105,7 @@ wss.on('connection', (ws) => {
         console.log(`Client ${username} disconnected`);
         clients = clients.filter((client) => client.ws !== ws);
         usedUsernames.delete(client.username);
+        broadcastServerMessage(`${username} has left the chat`, { username: 'Server', userColor: 'red' });
     });
 });
 

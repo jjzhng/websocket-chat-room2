@@ -10,6 +10,8 @@ const ChatRoom = () => {
     const [usernameSuccess, setUsernameSuccess] = useState('');
     const ws = useRef(null);
 
+    
+
     useEffect(() => {
         ws.current = new WebSocket('ws://localhost:8080');
 
