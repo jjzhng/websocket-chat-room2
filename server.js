@@ -8,6 +8,7 @@ const app = express();
 const server = http.createServer(app);
 
 const wss = new WebSocket.Server({ server });
+const bannedWords = ['blacklist', 'bad', 'nono']; 
 
 let clients = [];
 let usedUsernames = new Set();
@@ -115,7 +116,7 @@ wss.on('connection', (ws) => {
             } else if (data.type === 'message') {
                 let censoredMessage = data.text;
                 bannedWords.forEach(word => {
-                    censoredMessage = censoredMessage.replace(new RegExp(word, 'gi'), '****'); // Replace banned words with asterisks
+                    censoredMessage = censoredMessage.replace(new RegExp(word, 'gi'), '****');
                 });
     
                 broadcastMessage(censoredMessage, { username: client.username, userColor: client.userColor });
