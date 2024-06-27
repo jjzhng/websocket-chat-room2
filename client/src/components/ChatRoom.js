@@ -9,7 +9,6 @@ const ChatRoom = () => {
     const [usernameError, setUsernameError] = useState('');
     const [usernameSuccess, setUsernameSuccess] = useState('');
     const ws = useRef(null);
-    
 
     useEffect(() => {
         ws.current = new WebSocket('ws://localhost:8080');
@@ -20,7 +19,6 @@ const ChatRoom = () => {
 
         ws.current.onmessage = (event) => {
             const messageData = JSON.parse(event.data);
-
             console.log('Received message:', messageData); 
             
             if (messageData.type === 'notification') {
@@ -66,7 +64,6 @@ const ChatRoom = () => {
     const setUsernameHandler = () => {
         if (usernameInput.trim() !== '') {
             ws.current.send(JSON.stringify({ type: 'setUsername', username: usernameInput }));
-            setUsernameInput(''); // Clear username input field
         }
     };
 
